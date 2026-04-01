@@ -1,6 +1,6 @@
-# disable_battery_optimization_example
+# disable_battery_optimization_2_example
 
-Demonstrates how to use the disable_battery_optimization plugin.
+Demonstrates how to use the disable_battery_optimization_2 plugin.
 
 ## Getting Started
 

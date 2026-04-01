@@ -1,17 +1,25 @@
-# disable_battery_optimization
+# disable_battery_optimization_2
 
 Flutter plugin to check and disable battery optimizations. Also shows custom steps to disable the **manufacturer specific** optimizations on devices like mi, xiaomi, samsung, oppo, huawei, oneplus etc
 
+> This is a modernized fork of [disable_battery_optimization](https://pub.dev/packages/disable_battery_optimization), updated for AGP 8.x/9.x compatibility with jcenter removal and modern Gradle/Flutter conventions.
 
 ------------
 
-### Auto start
+### Installation
+
+```yaml
+dependencies:
+  disable_battery_optimization_2: ^2.0.0
 ```
+
+### Auto start
+```dart
 bool isAutoStartEnabled = await DisableBatteryOptimization.isAutoStartEnabled;
 ```
 This will return true, for the devices which doesn't support auto start configuration as well for the devices on which, user has clicked on positive action for the auto start configuration dialog.
 
-```
+```dart
 await DisableBatteryOptimization.showEnableAutoStartSettings("Enable Auto Start", "Follow the steps and enable the auto start of this app");
 ```
 This will show a dialog with steps to enable auto start permission on the current device (if it's available)
@@ -21,12 +29,12 @@ This will show a dialog with steps to enable auto start permission on the curren
 ------------
 
 ###  Android Battery Optimization
-```
+```dart
 bool isBatteryOptimizationDisabled = await DisableBatteryOptimization.isBatteryOptimizationDisabled;
 ```
 This will return true, only if the user has disabled the 'native' battery optimization for this app.
 
-```
+```dart
 await DisableBatteryOptimization.showDisableBatteryOptimizationSettings();
 ```
 This will ask for the permission to disable battery optimization for the app.
@@ -34,12 +42,12 @@ This will ask for the permission to disable battery optimization for the app.
 ------------
 
 ### Manufacturer specific Battery Optimization
-```
+```dart
 bool isManBatteryOptimizationDisabled = await DisableBatteryOptimization.isManufacturerBatteryOptimizationDisabled;
 ```
 This will return true, for the devices which doesn't support manufacturer specific battery optimization configuration as well for the devices on which, user has clicked on positive action for the manufacturer specific battery optimization configuration dialog.
 
-```
+```dart
 await DisableBatteryOptimization.showDisableManufacturerBatteryOptimizationSettings("Your device has additional battery optimization", "Follow the steps and disable the optimizations to allow smooth functioning of this app");
 ```
 This will show a dialog with steps to disable the manufacturer specific battery optimization on the current device (if it's available)
@@ -50,7 +58,7 @@ This will show a dialog with steps to disable the manufacturer specific battery 
 
 There are other helper methods available to check if all the permissions are enabled or disabled.
 
-```
+```dart
 await DisableBatteryOptimization.isAllBatteryOptimizationDisabled
 await DisableBatteryOptimization.showDisableAllOptimizationsSettings
 ```

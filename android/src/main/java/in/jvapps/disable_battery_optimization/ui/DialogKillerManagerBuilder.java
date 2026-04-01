@@ -1,6 +1,8 @@
 package in.jvapps.disable_battery_optimization.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -10,14 +12,12 @@ import android.widget.TextView;
 import androidx.annotation.DrawableRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.StringRes;
+import androidx.appcompat.app.AlertDialog;
 
-import com.afollestad.materialdialogs.DialogAction;
-import com.afollestad.materialdialogs.MaterialDialog;
+import in.jvapps.disable_battery_optimization.R;
 import in.jvapps.disable_battery_optimization.managers.KillerManager;
 import in.jvapps.disable_battery_optimization.utils.KillerManagerUtils;
 import in.jvapps.disable_battery_optimization.utils.LogUtils;
-
-import in.jvapps.disable_battery_optimization.R;
 
 public class DialogKillerManagerBuilder {
     private Context mContext;
@@ -113,8 +113,6 @@ public class DialogKillerManagerBuilder {
     }
 
     public void show() {
-
-        MaterialDialog materialDialog;
         if (mContext == null) {
             throw new NullPointerException("Context can't be null");
         }
@@ -133,66 +131,49 @@ public class DialogKillerManagerBuilder {
             return;
         }
 
-        MaterialDialog.Builder builder = new MaterialDialog.Builder(mContext);
-        if(positiveBtnStr == null){
+        if (positiveBtnStr == null) {
             positiveBtnStr = mContext.getText(R.string.dialog_button).toString();
         }
-        if(negativeBtnStr == null){
+        if (negativeBtnStr == null) {
             negativeBtnStr = mContext.getText(android.R.string.cancel).toString();
         }
 
-        builder.positiveText(positiveBtnStr)
-                .customView(R.layout.md_dialog_custom_view, false)
-                .onPositive(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        KillerManager.doAction(mContext, mAction);
-                        if(onPositive != null){
-                            onPositive.onClick(dialog.getView());
-                        }
+        if (enableDontShowAgain && KillerManagerUtils.isDontShowAgain(mContext, mAction)) {
+            return;
+        }
+
+        View customView = LayoutInflater.from(mContext).inflate(R.layout.md_dialog_custom_view, null);
+        initView(customView);
+
+        String title;
+        if (titleResMessage != -1) {
+            title = mContext.getString(titleResMessage);
+        } else if (titleMessage != null && !titleMessage.isEmpty()) {
+            title = titleMessage;
+        } else {
+            title = mContext.getString(R.string.dialog_title_notification,
+                    KillerManager.getDevice().getDeviceManufacturer().toString());
+        }
+
+        int icon = (iconRes != -1) ? iconRes : android.R.drawable.ic_dialog_alert;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(mContext)
+                .setTitle(title)
+                .setIcon(icon)
+                .setView(customView)
+                .setPositiveButton(positiveBtnStr, (dialog, which) -> {
+                    KillerManager.doAction(mContext, mAction);
+                    if (onPositive != null) {
+                        onPositive.onClick(null);
                     }
                 })
-                .negativeText(negativeBtnStr)
-                .onNegative(new MaterialDialog.SingleButtonCallback() {
-                    @Override
-                    public void onClick(@NonNull MaterialDialog dialog, @NonNull DialogAction which) {
-                        if(onNegative != null){
-                            onNegative.onClick(dialog.getView());
-                        }
+                .setNegativeButton(negativeBtnStr, (dialog, which) -> {
+                    if (onNegative != null) {
+                        onNegative.onClick(null);
                     }
                 });
 
-        if (iconRes != -1) {
-            builder.iconRes(iconRes);
-        } else {
-            builder.iconRes(android.R.drawable.ic_dialog_alert);
-        }
-
-        if (titleResMessage != -1) {
-            builder.title(titleResMessage);
-        } else if (titleMessage != null && !titleMessage.isEmpty()) {
-            builder.title(titleMessage);
-        } else {
-            builder.title(mContext.getString(R.string.dialog_title_notification, KillerManager.getDevice().getDeviceManufacturer().toString()));
-        }
-
-        if (this.enableDontShowAgain) {
-            builder.checkBoxPromptRes(R.string.dialog_do_not_show_again, false,
-                    new CompoundButton.OnCheckedChangeListener() {
-                        @Override
-                        public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                            KillerManagerUtils.setDontShowAgain(mContext, mAction, isChecked);
-                        }
-                    });
-        }
-
-        if (!(enableDontShowAgain && KillerManagerUtils.isDontShowAgain(mContext, mAction))) {
-            materialDialog = builder.show();
-
-            // init custom view
-            assert materialDialog.getCustomView() != null;
-            initView(materialDialog.getCustomView());
-        }
+        builder.show();
     }
 
     private void initView(View view) {
@@ -205,24 +186,17 @@ public class DialogKillerManagerBuilder {
         } else if (contentMessage != null && !contentMessage.isEmpty()) {
             contentTextView.setText(contentMessage);
         } else {
-            //TODO CUSTOM MESSAGE FOR SPECIFITQUE ACTIONS AND SPECIFIC DEVICE
             contentTextView.setText(String.format(mContext.getString(R.string.dialog_huawei_notification),
-                    mContext.getString(
-                            R.string.app_name)));
+                    mContext.getString(R.string.app_name)));
         }
 
         if (this.enableDontShowAgain) {
             doNotShowAgainCheckBox.setVisibility(View.VISIBLE);
             doNotShowAgainCheckBox.setText(R.string.dialog_do_not_show_again);
-            doNotShowAgainCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-                @Override
-                public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                    KillerManagerUtils.setDontShowAgain(mContext, mAction, isChecked);
-                }
-            });
+            doNotShowAgainCheckBox.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    KillerManagerUtils.setDontShowAgain(mContext, mAction, isChecked));
         }
 
-        //TODO add other specific images
         int helpImageRes = 0;
         switch (mAction) {
             case ACTION_AUTOSTART:
@@ -238,7 +212,7 @@ public class DialogKillerManagerBuilder {
 
         if (helpImageRes != 0) {
             helpImageView.setImageResource(helpImageRes);
-        }else{
+        } else {
             helpImageView.setVisibility(View.GONE);
         }
     }
